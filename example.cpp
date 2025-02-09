@@ -47,15 +47,14 @@ void ssd1322_lvgl_flush(lv_display_t *display, const lv_area_t *area, uint8_t *p
   oled.set_write_ram();
 
   for (uint16_t x = 0; x < pixels; x++) {
-      uint16_t z = x >> 1;
+    uint16_t z = x >> 1; // Each two pixels go into one byte
+    uint8_t pixel_4bit = buf[x] >> 4; // Conversion from 8-bit (0-255) to 4-bit (0-15)
 
-      if (x & 1u) {
-          pixel_buff[z] &= ~0x0f;
-          pixel_buff[z] |= buf[x] >> 4;
-      } else {
-          pixel_buff[z] &= ~0xf0;
-          pixel_buff[z] |= buf[x] << 4;
-      }
+    if (x & 1u) {
+        pixel_buff[z] |= pixel_4bit;  // Store lower 4 bits
+    } else {
+        pixel_buff[z] = (pixel_4bit << 4);  // Store upper 4 bits
+    }
   }
 
   oled.send_ssd1322_data_buffer(pixel_buff, bytes);
